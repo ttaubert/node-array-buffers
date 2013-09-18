@@ -7,24 +7,6 @@
 var test = require("tape");
 var ArrayBuffers = require("../");
 
-/*function create (xs, split) {
-    var bufs = Buffers();
-    var offset = 0;
-    split.forEach(function (i) {
-        bufs.push(new Buffer(xs.slice(offset, offset + i)));
-        offset += i;
-    });
-    return bufs;
-}
-
-function deepEqual (t, xs, ys, msg) {
-    t.deepEqual(
-        Buffer.isBuffer(xs) ? [].slice.call(xs) : xs,
-        Buffer.isBuffer(ys) ? [].slice.call(xs) : ys,
-        msg
-    );
-}*/
-
 function create(bytes) {
   var buffer = new ArrayBuffer(bytes.length);
   var array = new Uint8Array(buffer);
@@ -36,6 +18,29 @@ function create(bytes) {
   return buffer;
 }
 
+function create2(xs, split) {
+  var bufs = ArrayBuffers();
+  var offset = 0;
+  split.forEach(function (i) {
+    bufs.push(create(xs.slice(offset, offset + i)));
+    offset += i;
+  });
+  return bufs;
+}
+
+function deepEqual(t, xs, ys, msg) {
+  t.equal(xs.byteLength, ys.length);
+
+  var array = new Uint8Array(xs);
+  var xsvals = [];
+
+  for (var i = 0; i < array.length; i++) {
+    xsvals.push(array[i]);
+  }
+
+  t.deepEqual(xsvals, ys, msg);
+}
+
 test("push", function (t) {
   var bufs = ArrayBuffers();
   bufs.push(create([0]));
@@ -44,10 +49,7 @@ test("push", function (t) {
   bufs.push(create([4,5]));
   t.equal(bufs.push(create([6,7,8,9])), 10);
 
-  /*t.deepEqual(
-    bufs.slice(),
-    [0,1,2,3,4,5,6,7,8,9]
-  );*/
+  deepEqual(t, bufs.slice(), [0,1,2,3,4,5,6,7,8,9]);
 
   t.throws(function () {
     bufs.push(create([11,12]), "moo");
@@ -63,19 +65,16 @@ test("unshift", function (t) {
   t.equal(bufs.unshift(create([4,5])), 6);
 
   bufs.unshift(create([1,2,3]));
-  t.equal(bufs.unshift(create([0])), 10);
+  bufs.unshift(create([0]));
+  t.equal(bufs.unshift(create([99]), create([100])), 12);
 
-  /*deepEqual(
-      t,
-      bufs.slice(),
-      [0,1,2,3,4,5,6,7,8,9]
-  );*/
+  deepEqual(t, bufs.slice(), [100,99,0,1,2,3,4,5,6,7,8,9]);
 
   t.throws(function () {
     bufs.unshift(create([-2,-1]), "moo");
   });
 
-  t.equal(bufs.buffers.length, 4);
+  t.equal(bufs.buffers.length, 6);
   t.end();
 });
 
@@ -118,35 +117,27 @@ test("set", function (t) {
   t.end();
 });
 
-/*test('slice', function (t) {
-    var xs = [0,1,2,3,4,5,6,7,8,9];
-    var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
-    
-    splits.forEach(function (split) {
-        var bufs = create(xs, split);
-        deepEqual(t, new Buffer(xs), bufs.slice(),
-            '[' + xs.join(',') + ']'
-                + ' != ' + 
-            '[' + [].join.call(bufs.slice(), ',') + ']'
-        );
-        
-        for (var i = 0; i < xs.length; i++) {
-            for (var j = i; j < xs.length; j++) {
-                var a = bufs.slice(i,j);
-                var b = new Buffer(xs.slice(i,j));
-                
-                deepEqual(t, a, b,
-                    '[' + [].join.call(a, ',') + ']'
-                        + ' != ' + 
-                    '[' + [].join.call(b, ',') + ']'
-                );
-            }
-        }
-    });
-    t.end();
+test("slice", function (t) {
+  var xs = [0,1,2,3,4,5,6,7,8,9];
+  var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
+
+  splits.forEach(function (split) {
+    var bufs = create2(xs, split);
+    deepEqual(t, bufs.slice(), xs);
+
+    for (var i = 0; i < xs.length; i++) {
+      for (var j = i; j < xs.length; j++) {
+        var a = bufs.slice(i, j);
+        var b = xs.slice(i, j);
+        deepEqual(t, a, b);
+      }
+    }
+  });
+
+  t.end();
 });
 
-test('splice', function (t) {
+/*test('splice', function (t) {
     var xs = [0,1,2,3,4,5,6,7,8,9];
     var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
     

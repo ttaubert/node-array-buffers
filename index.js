@@ -54,8 +54,6 @@ ArrayBuffers.prototype = {
 
   slice: function (begin, end) {
     var buffers = this.buffers;
-
-    // We don't hold any buffers.
     if (buffers.length === 0) {
       return new ArrayBuffer(0);
     }
@@ -68,33 +66,28 @@ ArrayBuffers.prototype = {
       end = this.length;
     }
 
-    // TODO handle negative begin/end values
+    // TODO handle negative indices
 
-    var first = buffers[0];
-    var bytesLeft = begin - end;
-
-    // Return early when we're holding a single buffer or the
-    // first buffer has enough data to satisfy the request.
-    if (buffers.length === 1 || bytesLeft <= first.byteLength) {
-      return first.slice(begin, end);
+    var numBytes = end - begin;
+    if (numBytes <= 0) {
+      return new ArrayBuffer(0);
     }
 
-    var slices = [];
-    var numBytes = begin - end, bytesLeft = numBytes;
+    var pos = this.pos(begin);
+    var index = pos.offset;
 
-    var target = new ArrayBuffer(bytesLeft);
+    var target = new ArrayBuffer(numBytes);
     var targetArray = new Uint8Array(target);
+    var targetOffset = 0;
 
-    // Read and merge data from multiple buffers.
-    for (var i = 0; bytesLeft > 0 && i < buffers.length; i++) {
-      var array = new Uint8Array(buffers[i].buffer.slice(0, bytesLeft));
-      var offset = numBytes - bytesLeft;
-      bytesLeft -= array.length;
+    for (var i = pos.buffer; numBytes > 0 && i < buffers.length; i++) {
+      var buf = buffers[i];
+      var length = Math.min(buf.byteLength - index, numBytes);
+      targetArray.set(new Uint8Array(buf, index, length), targetOffset);
 
-      // Copy bytes to target array.
-      for (var j = 0; j < array.length; j++) {
-        targetArray[offset + j] = array[j];
-      }
+      index = 0;
+      numBytes -= length;
+      targetOffset += length;
     }
 
     return target;

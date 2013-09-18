@@ -1,6 +1,6 @@
 {
   "name": "array-buffers",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Treat a collection of ArrayBuffers as a single contiguous ArrayBuffer.",
   "main": "index.js",
   "devDependencies" : {
