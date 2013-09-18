@@ -1,0 +1,37 @@
+{
+  "name": "array-buffers",
+  "version": "0.0.1",
+  "description": "Treat a collection of ArrayBuffers as a single contiguous ArrayBuffer.",
+  "main": "index.js",
+  "devDependencies" : {
+    "tape" : "~1.1.0"
+  },
+  "scripts" : {
+    "test" : "tape test/*.js"
+  },
+  "keywords": [
+    "array", "buffer", "arraybuffer"
+  ],
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/10..latest",
+      "chrome/20..latest",
+      "firefox/18..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6", "ipad/6"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ttaubert/node-array-buffers.git"
+  },
+  "homepage": "https://github.com/ttaubert/node-array-buffers",
+  "author": {
+    "name": "Tim Taubert",
+    "email": "tim@timtaubert.de",
+    "url": "http://timtaubert.de/"
+  },
+  "license": "MIT"
+}
