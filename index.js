@@ -30,7 +30,6 @@ ArrayBuffers.prototype = {
     for (var i = 0; i < arguments.length; i++) {
       var buf = arguments[i];
       this.buffers.push(buf);
-      console.log(this.length, buf.byteLength);
       this.length += buf.byteLength;
     }
 
@@ -101,29 +100,32 @@ ArrayBuffers.prototype = {
     return target;
   },
 
-  /*pos: function (i) {
-      if (i < 0 || i >= this.length) throw new Error('oob');
-      var l = i, bi = 0, bu = null;
-      for (;;) {
-          bu = this.buffers[bi];
-          if (l < bu.length) {
-              return {buf: bi, offset: l};
-          } else {
-              l -= bu.length;
-          }
-          bi++;
+  pos: function (index) {
+    if (index < 0 || index >= this.length) {
+      throw new Error("oob");
+    }
+
+    var buffers = this.buffers;
+
+    for (var i = 0; i < buffers.length; i++, index -= buf.byteLength) {
+      var buf = buffers[i];
+      if (index < buf.byteLength) {
+        return {buffer: i, offset: index};
       }
+    }
   },
 
-  get: function get (i) {
-    var pos = this.pos(i);
-    return this.buffers[pos.buf].get(pos.offset);
+  get: function get(index) {
+    var pos = this.pos(index);
+    var view = new DataView(this.buffers[pos.buffer]);
+    return view.getUint8(pos.offset);
   },
 
-  set: function set (i, b) {
-    var pos = this.pos(i);
-    return this.buffers[pos.buf].set(pos.offset, b);
-  },*/
+  set: function set(index, val) {
+    var pos = this.pos(index);
+    var view = new DataView(this.buffers[pos.buffer]);
+    return view.setUint8(pos.offset, val);
+  },
 
   toBuffer: function () {
     return this.slice();
