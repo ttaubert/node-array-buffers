@@ -80,24 +80,24 @@ test("unshift", function (t) {
 });
 
 test("get", function (t) {
-    var bufs = ArrayBuffers();
-    bufs.unshift(create([6,7,8,9]));
-    bufs.unshift(create([4,5]));
-    bufs.unshift(create([1,2,3]));
-    bufs.unshift(create([0]));
+  var bufs = ArrayBuffers();
+  bufs.unshift(create([6,7,8,9]));
+  bufs.unshift(create([4,5]));
+  bufs.unshift(create([1,2,3]));
+  bufs.unshift(create([0]));
 
-    t.equal(bufs.get(0), 0);
-    t.equal(bufs.get(1), 1);
-    t.equal(bufs.get(2), 2);
-    t.equal(bufs.get(3), 3);
-    t.equal(bufs.get(4), 4);
-    t.equal(bufs.get(5), 5);
-    t.equal(bufs.get(6), 6);
-    t.equal(bufs.get(7), 7);
-    t.equal(bufs.get(8), 8);
-    t.equal(bufs.get(9), 9);
+  t.equal(bufs.get(0), 0);
+  t.equal(bufs.get(1), 1);
+  t.equal(bufs.get(2), 2);
+  t.equal(bufs.get(3), 3);
+  t.equal(bufs.get(4), 4);
+  t.equal(bufs.get(5), 5);
+  t.equal(bufs.get(6), 6);
+  t.equal(bufs.get(7), 7);
+  t.equal(bufs.get(8), 8);
+  t.equal(bufs.get(9), 9);
 
-    t.end();
+  t.end();
 });
 
 test("set", function (t) {
