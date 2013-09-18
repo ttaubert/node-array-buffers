@@ -93,6 +93,12 @@ ArrayBuffers.prototype = {
     return target;
   },
 
+  copy: function (dst, dstart, start, end) {
+    var dstArray = new Uint8Array(dst, dstart);
+    var srcArray = new Uint8Array(this.slice(start, end));
+    dstArray.set(srcArray);
+  },
+
   pos: function (index) {
     if (index < 0 || index >= this.length) {
       throw new Error("oob");

@@ -29,16 +29,22 @@ function create2(xs, split) {
 }
 
 function deepEqual(t, xs, ys, msg) {
-  t.equal(xs.byteLength, ys.length);
+  function conv(data) {
+    if (Array.isArray(data)) {
+      return data;
+    }
 
-  var array = new Uint8Array(xs);
-  var xsvals = [];
+    var vals = [];
+    var array = new Uint8Array(data);
 
-  for (var i = 0; i < array.length; i++) {
-    xsvals.push(array[i]);
+    for (var i = 0; i < array.length; i++) {
+      vals.push(array[i]);
+    }
+
+    return vals;
   }
 
-  t.deepEqual(xsvals, ys, msg);
+  t.deepEqual(conv(xs), conv(ys), msg);
 }
 
 test("push", function (t) {
@@ -119,7 +125,7 @@ test("set", function (t) {
 
 test("slice", function (t) {
   var xs = [0,1,2,3,4,5,6,7,8,9];
-  var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
+  var splits = [[4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5]];
 
   splits.forEach(function (split) {
     var bufs = create2(xs, split);
@@ -130,6 +136,29 @@ test("slice", function (t) {
         var a = bufs.slice(i, j);
         var b = xs.slice(i, j);
         deepEqual(t, a, b);
+      }
+    }
+  });
+
+  t.end();
+});
+
+test('copy', function (t) {
+  var xs = [0,1,2,3,4,5,6,7,8,9];
+  var splits = [[4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5]];
+
+  splits.forEach(function (split) {
+    var bufs = create2(xs, split);
+    var buf = create(xs);
+
+    for (var i = 0; i < xs.length; i++) {
+      for (var j = i; j < xs.length; j++) {
+        var t0 = new ArrayBuffer(j - i);
+        var t1 = new ArrayBuffer(j - i);
+
+        bufs.copy(t0, 0, i, j);
+        new Uint8Array(t1).set(new Uint8Array(buf.slice(i, j)));
+        deepEqual(t, t0, t1);
       }
     }
   });
@@ -202,32 +231,6 @@ test('splice rep', function (t) {
     });
     t.end();
 }); 
-
-test('copy', function (t) {
-    var xs = [0,1,2,3,4,5,6,7,8,9];
-    var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
-    
-    splits.forEach(function (split) {
-        var bufs = create(xs, split);
-        var buf = new Buffer(xs);
-        
-        for (var i = 0; i < xs.length; i++) {
-            for (var j = i; j < xs.length; j++) {
-                var t0 = new Buffer(j - i);
-                var t1 = new Buffer(j - i);
-                
-                deepEqual(
-                    t,
-                    bufs.copy(t0, 0, i, j),
-                    buf.copy(t1, 0, i, j)
-                );
-                
-                deepEqual(t, t0, t1);
-            }
-        }
-    });
-    t.end();
-});
 
 test('indexOf', function (t) {
     var bufs = Buffers();
