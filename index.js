@@ -1,4 +1,4 @@
-// https://github.com/ttaubert/array-buffers
+// https://github.com/ttaubert/node-array-buffers
 // (c) 2013 Tim Taubert <tim@timtaubert.de>
 // array-buffers may be freely distributed under the MIT license.
 
