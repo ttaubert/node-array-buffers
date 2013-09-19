@@ -116,9 +116,7 @@ test("set", function (t) {
   bufs.set(5, ".".charCodeAt(0));
 
   t.equal(bufs.buffers.length, 3);
-  t.equal(bufs.get(0), "h".charCodeAt(0));
-  t.equal(bufs.get(3), "L".charCodeAt(0));
-  t.equal(bufs.get(5), ".".charCodeAt(0));
+  t.equal(bufs.toString(), "helLo.");
 
   t.end();
 });

@@ -4,6 +4,8 @@
 
 "use strict";
 
+var utf8 = require("to-utf8");
+
 module.exports = ArrayBuffers;
 
 function ArrayBuffers(buffers) {
@@ -128,6 +130,13 @@ ArrayBuffers.prototype = {
 
   toBuffer: function () {
     return this.slice();
+  },
+
+  toString: function (encoding, start, end) {
+    if (encoding && encoding != "utf8") {
+      throw new Error("unsupported encoding");
+    }
+    return utf8(new Uint8Array(this.slice(start, end)));
   }
 };
 
