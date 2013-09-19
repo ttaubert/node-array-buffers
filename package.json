@@ -13,7 +13,11 @@
     "test" : "tape test/*.js"
   },
   "keywords": [
-    "array", "buffer", "arraybuffer"
+    "array",
+    "buffer",
+    "ArrayBuffer",
+    "ArrayBuffers",
+    "TypedArray"
   ],
   "testling": {
     "files": "test/*.js",
