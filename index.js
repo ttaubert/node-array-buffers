@@ -106,6 +106,10 @@ ArrayBuffers.prototype = {
       throw new Error("oob");
     }
 
+    if (!index) {
+      return {buffer: 0, offset: 0};
+    }
+
     var buffers = this.buffers;
 
     for (var i = 0; i < buffers.length; i++, index -= buf.byteLength) {
@@ -128,6 +132,44 @@ ArrayBuffers.prototype = {
     return view.setUint8(pos.offset, val);
   },
 
+  indexOf: function (needle, offset) {
+    if (typeof(needle) === "string") {
+      needle = createBufferFromString(needle);
+    } else if (!isArrayBuffer(needle)) {
+      throw new TypeError("needle must be a string or an ArrayBuffer");
+    }
+
+    if (!needle.byteLength) {
+      return 0;
+    }
+
+    if (!this.length) {
+      return -1;
+    }
+
+    var pos = this.pos(offset);
+    var buffers = this.buffers;
+    var index = offset || 0, match = 0;
+    var needleArray = new Uint8Array(needle);
+
+    for (var i = pos.buffer; i < buffers.length; i++) {
+      var array = new Uint8Array(buffers[i], pos.offset);
+      pos.offset = 0;
+
+      for (var j = 0; j < array.length; j++, index++) {
+        if (array[j] === needleArray[match]) {
+          if (++match === needleArray.length) {
+            return index - match + 1;
+          }
+        } else {
+          match = 0;
+        }
+      }
+    }
+
+    return -1;
+  },
+
   toBuffer: function () {
     return this.slice();
   },
@@ -139,6 +181,17 @@ ArrayBuffers.prototype = {
     return utf8(new Uint8Array(this.slice(start, end)));
   }
 };
+
+function createBufferFromString(str) {
+  var buffer = new ArrayBuffer(str.length);
+  var array = new Uint8Array(buffer);
+
+  for (var i = 0; i < str.length; i++) {
+    array[i] = str.charCodeAt(i);
+  }
+
+  return buffer;
+}
 
 function isArrayBuffer(obj) {
   return Object.prototype.toString.call(obj) === "[object ArrayBuffer]";
