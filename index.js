@@ -5,6 +5,7 @@
 "use strict";
 
 var utf8 = require("to-utf8");
+var ArrayBufferSlice = require("arraybuffer-slice");
 
 module.exports = ArrayBuffers;
 

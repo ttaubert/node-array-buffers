@@ -1,12 +1,13 @@
 {
   "name": "array-buffers",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Treat a collection of ArrayBuffers as a single contiguous ArrayBuffer.",
   "main": "index.js",
   "dependencies" : {
-    "to-utf8" : "~0.0.1"
+    "to-utf8" : "~0.0.1",
+    "arraybuffer-slice" : "~0.0.2"
   },
-  "devDependencies" : {
+  "devDependencies": {
     "tape" : "~1.1.0"
   },
   "scripts" : {
