@@ -56,26 +56,19 @@ ArrayBuffers.prototype = {
   },
 
   slice: function (begin, end) {
-    var buffers = this.buffers;
-    if (buffers.length === 0) {
+    begin = (begin|0) || 0;
+    var num = this.length;
+    end = end === (void 0) ? num : (end|0);
+
+    // Handle negative values.
+    if (begin < 0) begin += num;
+    if (end < 0) end += num;
+
+    if (num === 0 || begin >= num || begin >= end) {
       return new ArrayBuffer(0);
     }
 
-    if (begin === undefined) {
-      begin = 0;
-    }
-
-    if (end === undefined || end > this.length) {
-      end = this.length;
-    }
-
-    // TODO handle negative indices
-
-    var numBytes = end - begin;
-    if (numBytes <= 0) {
-      return new ArrayBuffer(0);
-    }
-
+    var numBytes = Math.min(num - begin, end - begin);
     var pos = this.pos(begin);
     var index = pos.offset;
 
@@ -83,6 +76,7 @@ ArrayBuffers.prototype = {
     var targetArray = new Uint8Array(target);
     var targetOffset = 0;
 
+    var buffers = this.buffers;
     for (var i = pos.buffer; numBytes > 0 && i < buffers.length; i++) {
       var buf = buffers[i];
       var length = Math.min(buf.byteLength - index, numBytes);

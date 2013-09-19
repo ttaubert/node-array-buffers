@@ -141,6 +141,19 @@ test("slice", function (t) {
   t.end();
 });
 
+test("slice 2", function (t) {
+  var bufs = ArrayBuffers();
+  bufs.push(create([0,1,2]), create([3,4,5]), create([6,7,8]));
+
+  deepEqual(t, bufs.slice(2, 5), [2,3,4]);
+  deepEqual(t, bufs.slice(-4, -2), [5,6]);
+  deepEqual(t, bufs.slice(2, 2), []);
+  deepEqual(t, bufs.slice(2, 1), []);
+  deepEqual(t, bufs.slice(-4), [5,6,7,8]);
+
+  t.end();
+});
+
 test("copy", function (t) {
   var xs = [0,1,2,3,4,5,6,7,8,9];
   var splits = [[4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5]];
