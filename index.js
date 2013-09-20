@@ -56,36 +56,13 @@ ArrayBuffers.prototype = {
   },
 
   slice: function (begin, end) {
-    begin = (begin|0) || 0;
-    var num = this.length;
-    end = end === (void 0) ? num : (end|0);
-
-    if (begin < 0) begin += num;
-    if (end < 0) end += num;
-
-    if (num === 0 || begin >= num || begin >= end) {
+    var args = parseSliceArgs.call(this, begin, end);
+    if (!args) {
       return new ArrayBuffer(0);
     }
 
-    var numBytes = Math.min(num - begin, end - begin);
-    var buffers = this.buffers;
-    var pos = this.pos(begin);
-    var index = pos.offset;
-
-    var target = new ArrayBuffer(numBytes);
-    var targetArray = new Uint8Array(target);
-    var targetOffset = 0;
-
-    for (var i = pos.buffer; numBytes > 0 && i < buffers.length; i++) {
-      var buf = buffers[i];
-      var length = Math.min(buf.byteLength - index, numBytes);
-      targetArray.set(new Uint8Array(buf, index, length), targetOffset);
-
-      index = 0;
-      numBytes -= length;
-      targetOffset += length;
-    }
-
+    var target = new ArrayBuffer(args.length);
+    copyInternal.call(this, target, 0, args.begin, args.length);
     return target;
   },
 
@@ -134,10 +111,13 @@ ArrayBuffers.prototype = {
     return removedBuffers;
   },
 
-  copy: function (dst, dstart, start, end) {
-    var dstArray = new Uint8Array(dst, dstart);
-    var srcArray = new Uint8Array(this.slice(start, end));
-    dstArray.set(srcArray);
+  copy: function (dst, dstart, begin, end) {
+    var args = parseSliceArgs.call(this, begin, end);
+    if (!args) {
+      return; // nothing to do
+    }
+
+    copyInternal.call(this, dst, dstart, args.begin, args.length);
   },
 
   pos: function (index) {
@@ -218,6 +198,42 @@ ArrayBuffers.prototype = {
       throw new Error("unsupported encoding");
     }
     return utf8(new Uint8Array(this.slice(start, end)));
+  }
+};
+
+function parseSliceArgs(begin, end) {
+  begin = (begin|0) || 0;
+  var num = this.length;
+  end = end === (void 0) ? num : (end|0);
+
+  if (begin < 0) begin += num;
+  if (end < 0) end += num;
+
+  if (num === 0 || begin >= num || begin >= end) {
+    return null;
+  }
+
+  return {begin: begin, length: Math.min(num, end) - begin};
+}
+
+function copyInternal(dst, dstart, begin, numBytes) {
+  dstart = (dstart|0) || 0;
+
+  var buffers = this.buffers;
+  var pos = this.pos(begin);
+  var index = pos.offset;
+
+  var targetArray = new Uint8Array(dst, dstart);
+  var targetOffset = 0;
+
+  for (var i = pos.buffer; numBytes > 0 && i < buffers.length; i++) {
+    var buf = buffers[i];
+    var length = Math.min(buf.byteLength - index, numBytes);
+    targetArray.set(new Uint8Array(buf, index, length), targetOffset);
+
+    index = 0;
+    numBytes -= length;
+    targetOffset += length;
   }
 };
 
