@@ -37,12 +37,36 @@ output:
     $ node examples/slice.js
     <ArrayBuffer 03 04 05 06 07 08>
 
+## splice
+
+    function createBuffer(elems) {
+      var array = new Uint8Array(new ArrayBuffer(elems.length));
+      elems.forEach(function (elem, i) { array[i] = elem });
+      return array.buffer;
+    }
+
+    var ArrayBuffers = require("array-buffers");
+    var bufs = ArrayBuffers();
+    bufs.push(createBuffer([1,2,3]));
+    bufs.push(createBuffer([4,5,6,7]));
+    bufs.push(createBuffer([8,9,10]));
+
+    var removed = bufs.splice(2, 4);
+    console.log(removed.slice());
+    console.log(bufs.slice());
+
+output:
+
+    $ node examples/splice.js
+    <ArrayBuffer 03 04 05 06>
+    <ArrayBuffer 01 02 07 08 09 0a>
+
 # methods
 
 ArrayBuffers(buffers)
 ----------------
 
-Create a ArrayBuffers with an array of `ArrayBuffer`s if specified, else `[]`.
+Create an ArrayBuffers with an array of `ArrayBuffer`s if specified, else `[]`.
 
 .push(buf1, buf2...)
 --------------------
@@ -98,7 +122,7 @@ is spread out over multiple internal buffers.
 .toBuffer()
 -----------
 
-Convert the buffer collection to a single buffer, equivalent with `.slice(0, buffers.length)`;
+Convert the buffer collection to a single buffer, equivalent with `.slice(0, buffers.length)`
 
 .toString(encoding, start, end)
 -----------

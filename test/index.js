@@ -21,10 +21,12 @@ function create(bytes) {
 function create2(xs, split) {
   var bufs = ArrayBuffers();
   var offset = 0;
+
   split.forEach(function (i) {
     bufs.push(create(xs.slice(offset, offset + i)));
     offset += i;
   });
+
   return bufs;
 }
 
@@ -32,6 +34,10 @@ function deepEqual(t, xs, ys, msg) {
   function conv(data) {
     if (Array.isArray(data)) {
       return data;
+    }
+
+    if (data instanceof ArrayBuffers) {
+      data = data.slice();
     }
 
     var vals = [];
@@ -197,68 +203,96 @@ test("indexOf", function (t) {
   t.end();
 });
 
-/*test('splice', function (t) {
-    var xs = [0,1,2,3,4,5,6,7,8,9];
-    var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
-    
-    splits.forEach(function (split) {
-        for (var i = 0; i < xs.length; i++) {
-            for (var j = i; j < xs.length; j++) {
-                var bufs = create(xs, split);
-                var xs_ = xs.slice();
-                
-                var a_ = bufs.splice(i,j);
-                var a = [].slice.call(a_.slice());
-                var b = xs_.splice(i,j);
-                deepEqual(t, a, b,
-                    '[' + a.join(',') + ']'
-                        + ' != ' + 
-                    '[' + b.join(',') + ']'
-                );
-                
-                deepEqual(t, bufs.slice(), new Buffer(xs_),
-                    '[' + [].join.call(bufs.slice(), ',') + ']'
-                        + ' != ' + 
-                    '[' + [].join.call(xs_, ',') + ']'
-                );
-            }
-        }
-    });
-    t.end();
+test("splice", function (t) {
+  var bufs = ArrayBuffers([create([0,1]), create([2,3])]);
+
+  // do nothing
+  bufs.splice(0, 0);
+  deepEqual(t, bufs, [0,1,2,3]);
+
+  // append at the end
+  bufs.splice(4, 0, create([4,5]));
+  deepEqual(t, bufs, [0,1,2,3,4,5]);
+
+  // insert at the beginning
+  bufs.splice(0, 0, create([6,7]));
+  deepEqual(t, bufs, [6,7,0,1,2,3,4,5]);
+
+  // insert in the middle
+  bufs.splice(4, 0, create([8,9]));
+  deepEqual(t, bufs, [6,7,0,1,8,9,2,3,4,5]);
+
+  // check lengths
+  deepEqual(t, bufs.buffers.length, 5);
+  deepEqual(t, bufs.length, 10);
+
+  // replace at the beginning
+  var rem = bufs.splice(0, 2, create([99]));
+  deepEqual(t, bufs, [99,0,1,8,9,2,3,4,5]);
+  deepEqual(t, rem, [6,7]);
+
+  rem = bufs.splice(0, 2, create([98]));
+  deepEqual(t, bufs, [98,1,8,9,2,3,4,5]);
+  deepEqual(t, rem, [99,0]);
+
+  // replace at the end
+  rem = bufs.splice(-3, 3, create([99,100,101]));
+  deepEqual(t, bufs, [98,1,8,9,2,99,100,101]);
+  deepEqual(t, rem, [3,4,5]);
+  deepEqual(t, bufs.length, 8);
+
+  // replace in the middle
+  rem = bufs.splice(1, 2, create([7,7,7]));
+  deepEqual(t, bufs, [98,7,7,7,9,2,99,100,101]);
+
+  t.end();
 });
 
-test('splice rep', function (t) {
-    var xs = [0,1,2,3,4,5,6,7,8,9];
-    var splits = [ [4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5] ];
-    var reps = [ [], [1], [5,6], [3,1,3,3,7], [9,8,7,6,5,4,3,2,1,2,3,4,5] ];
-    
-    splits.forEach(function (split) {
-        reps.forEach(function (rep) {
-            for (var i = 0; i < xs.length; i++) {
-                for (var j = i; j < xs.length; j++) {
-                    var bufs = create(xs, split);
-                    var xs_ = xs.slice();
-                    
-                    var a_ = bufs.splice.apply(
-                        bufs, [ i, j ].concat(new Buffer(rep))
-                    );
-                    var a = [].slice.call(a_.slice());
-                    var b = xs_.splice.apply(xs_, [ i, j ].concat(rep));
-                    
-                    deepEqual(t, a, b,
-                        '[' + a.join(',') + ']'
-                            + ' != ' + 
-                        '[' + b.join(',') + ']'
-                    );
-                    
-                    deepEqual(t, bufs.slice(), new Buffer(xs_),
-                        '[' + [].join.call(bufs.slice(), ',') + ']'
-                            + ' != ' + 
-                        '[' + [].join.call(xs_, ',') + ']'
-                    );
-                }
-            }
-        });
+test("splice 2", function (t) {
+  var xs = [0,1,2,3,4,5,6,7,8,9];
+  var splits = [[4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5]];
+
+  splits.forEach(function (split) {
+    for (var i = 0; i < xs.length; i++) {
+      for (var j = i; j < xs.length; j++) {
+        var bufs = create2(xs, split);
+        var xs_ = xs.slice();
+
+        var a = bufs.splice(i, j);
+        var b = xs_.splice(i, j);
+        deepEqual(t, a, b);
+        deepEqual(t, bufs.slice(), create(xs_));
+      }
+    }
+  });
+
+  t.end();
+});
+
+test("splice 3", function (t) {
+  var xs = [0,1,2,3,4,5,6,7,8,9];
+  var splits = [[4,2,3,1], [2,2,2,2,2], [1,6,3,1], [9,2], [10], [5,5]];
+  var reps = [[], [1], [5,6], [3,1,3,3,7], [9,8,7,6,5,4,3,2,1,2,3,4,5]];
+
+  splits.forEach(function (split) {
+    reps.forEach(function (rep) {
+      for (var i = 0; i < xs.length; i++) {
+        for (var j = i; j < xs.length; j++) {
+          var bufs = create2(xs, split);
+          var xs_ = xs.slice();
+
+          var a = bufs.splice.apply(
+            bufs, [i, j].concat(create(rep))
+          );
+
+          var b = xs_.splice.apply(xs_, [i, j].concat(rep));
+
+          deepEqual(t, a, b);
+          deepEqual(t, bufs.slice(), create(xs_));
+        }
+      }
     });
-    t.end();
-});*/
+  });
+
+  t.end();
+});

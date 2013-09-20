@@ -60,7 +60,6 @@ ArrayBuffers.prototype = {
     var num = this.length;
     end = end === (void 0) ? num : (end|0);
 
-    // Handle negative values.
     if (begin < 0) begin += num;
     if (end < 0) end += num;
 
@@ -69,6 +68,7 @@ ArrayBuffers.prototype = {
     }
 
     var numBytes = Math.min(num - begin, end - begin);
+    var buffers = this.buffers;
     var pos = this.pos(begin);
     var index = pos.offset;
 
@@ -76,7 +76,6 @@ ArrayBuffers.prototype = {
     var targetArray = new Uint8Array(target);
     var targetOffset = 0;
 
-    var buffers = this.buffers;
     for (var i = pos.buffer; numBytes > 0 && i < buffers.length; i++) {
       var buf = buffers[i];
       var length = Math.min(buf.byteLength - index, numBytes);
@@ -88,6 +87,51 @@ ArrayBuffers.prototype = {
     }
 
     return target;
+  },
+
+  splice: function (offset, howMany) {
+    var num = this.length;
+    offset = Math.min(num, (offset|0) || 0);
+    if (offset < 0) offset += num;
+
+    var buffers = this.buffers;
+    howMany = Math.max(0, (howMany|0) || 0);
+
+    // split an internal buffer in two
+    function splitAt(pos) {
+      var bufi = pos.buffer;
+
+      if (pos.offset > 0) {
+        var buf = buffers[bufi];
+        var left = buf.slice(0, pos.offset);
+        var right = buf.slice(pos.offset);
+        buffers.splice(bufi, 1, left, right);
+        bufi++;
+      }
+
+      return bufi;
+    }
+
+    var bcount = 0;
+    var boffset = buffers.length;
+
+    if (offset < num) {
+      var end = offset + howMany;
+      bcount = -(boffset = splitAt(this.pos(offset)));
+      bcount += end < num ? splitAt(this.pos(end)) : buffers.length;
+    }
+
+    var reps = [].slice.call(arguments, 2);
+    var args = [boffset, bcount].concat(reps);
+    var removed = buffers.splice.apply(buffers, args);
+
+    for (var i = 0; i < reps.length; i++) {
+      this.length += reps[i].byteLength;
+    }
+
+    var removedBuffers = ArrayBuffers(removed);
+    this.length -= removedBuffers.length;
+    return removedBuffers;
   },
 
   copy: function (dst, dstart, start, end) {
