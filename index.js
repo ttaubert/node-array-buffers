@@ -5,7 +5,6 @@
 "use strict";
 
 var utf8 = require("to-utf8");
-var ArrayBufferSlice = require("arraybuffer-slice");
 
 module.exports = ArrayBuffers;
 
@@ -56,7 +55,7 @@ ArrayBuffers.prototype = {
   },
 
   slice: function (begin, end) {
-    var args = parseSliceArgs.call(this, begin, end);
+    var args = parseSliceArgs(this.length, begin, end);
     if (!args) {
       return new ArrayBuffer(0);
     }
@@ -80,8 +79,8 @@ ArrayBuffers.prototype = {
 
       if (pos.offset > 0) {
         var buf = buffers[bufi];
-        var left = buf.slice(0, pos.offset);
-        var right = buf.slice(pos.offset);
+        var left = sliceBuffer(buf, 0, pos.offset);
+        var right = sliceBuffer(buf, pos.offset);
         buffers.splice(bufi, 1, left, right);
         bufi++;
       }
@@ -112,7 +111,7 @@ ArrayBuffers.prototype = {
   },
 
   copy: function (dst, dstart, begin, end) {
-    var args = parseSliceArgs.call(this, begin, end);
+    var args = parseSliceArgs(this.length, begin, end);
     if (!args) {
       return; // nothing to do
     }
@@ -201,9 +200,8 @@ ArrayBuffers.prototype = {
   }
 };
 
-function parseSliceArgs(begin, end) {
+function parseSliceArgs(num, begin, end) {
   begin = (begin|0) || 0;
-  var num = this.length;
   end = end === (void 0) ? num : (end|0);
 
   if (begin < 0) begin += num;
@@ -246,6 +244,27 @@ function createBufferFromString(str) {
   }
 
   return buffer;
+}
+
+function sliceBuffer(buf, begin, end) {
+  // Use ArrayBuffer.slice when available.
+  if (typeof(buf.slice) === "function") {
+    if (typeof(end) === "undefined") {
+      end = buf.byteLength;
+    }
+    return buf.slice(begin, end);
+  }
+
+  // Fallback to a custom implementation for IE.
+  var args = parseSliceArgs(buf.byteLength, begin, end);
+  if (!args) {
+    return new ArrayBuffer(0);
+  }
+
+  var target = new ArrayBuffer(args.length);
+  var targetArray = new Uint8Array(target);
+  targetArray.set(new Uint8Array(buf, args.begin, args.length));
+  return target;
 }
 
 function isArrayBuffer(obj) {
