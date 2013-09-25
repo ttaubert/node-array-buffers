@@ -61,7 +61,7 @@ ArrayBuffers.prototype = {
     }
 
     var target = new ArrayBuffer(args.length);
-    copyInternal.call(this, target, 0, args.begin, args.length);
+    copyInternal(this, target, 0, args.begin, args.length);
     return target;
   },
 
@@ -113,7 +113,7 @@ ArrayBuffers.prototype = {
   copy: function (dst, dstart, begin, end) {
     var args = parseSliceArgs(this.length, begin, end);
     if (args) {
-      copyInternal.call(this, dst, dstart, args.begin, args.length);
+      copyInternal(this, dst, dstart, args.begin, args.length);
     }
   },
 
@@ -212,11 +212,11 @@ function parseSliceArgs(num, begin, end) {
   return {begin: begin, length: Math.min(num, end) - begin};
 }
 
-function copyInternal(dst, dstart, begin, numBytes) {
+function copyInternal(bufs, dst, dstart, begin, numBytes) {
   dstart = (dstart|0) || 0;
 
-  var buffers = this.buffers;
-  var pos = this.pos(begin);
+  var buffers = bufs.buffers;
+  var pos = bufs.pos(begin);
   var index = pos.offset;
 
   var targetArray = new Uint8Array(dst, dstart);
