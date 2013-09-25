@@ -112,11 +112,9 @@ ArrayBuffers.prototype = {
 
   copy: function (dst, dstart, begin, end) {
     var args = parseSliceArgs(this.length, begin, end);
-    if (!args) {
-      return; // nothing to do
+    if (args) {
+      copyInternal.call(this, dst, dstart, args.begin, args.length);
     }
-
-    copyInternal.call(this, dst, dstart, args.begin, args.length);
   },
 
   pos: function (index) {
